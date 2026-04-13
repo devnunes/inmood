@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+node_modules/
+
+# Data files
+*.csv
+
+# Chroma database and binaries
+vector_database/chroma/
+
