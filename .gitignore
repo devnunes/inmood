@@ -16,3 +16,4 @@ node_modules/
 # Chroma database and binaries
 vector_database/chroma/
 
+.vscode
