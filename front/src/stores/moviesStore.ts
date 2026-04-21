@@ -19,11 +19,10 @@ export type Movie = z.infer<typeof MovieSchema>
 interface MoviesState {
   moviesCollection: Collection | null
   setMoviesCollection: () => Promise<void>
-  getMoviesSuggestions: (phrase: string) => Promise<void>
+  setMoviesSuggestions: (phrase: string) => Promise<void>
   movies: Movie[]
   isLoading: boolean
   hasLoaded: boolean
-  error: string | null
 }
 
 const useMoviesStore = create<MoviesState>()(
@@ -38,7 +37,6 @@ const useMoviesStore = create<MoviesState>()(
       try {
         set(state => {
           state.isLoading = true
-          state.error = null
         })
 
         const moviesCollection = await chromaClient.getCollection({
@@ -51,11 +49,9 @@ const useMoviesStore = create<MoviesState>()(
           state.hasLoaded = true
         })
       } catch (error) {
-        console.error('Error initializing movies collection:', error)
-        set(state => {
-          state.error = (error as Error).message
-        })
-        throw error
+        throw new Error(
+          `Error initializing movies collection: ${(error as Error).message}`
+        )
       } finally {
         set(state => {
           state.isLoading = false
@@ -63,7 +59,7 @@ const useMoviesStore = create<MoviesState>()(
       }
     }
 
-    async function getMoviesSuggestions(phrase: string) {
+    async function setMoviesSuggestions(phrase: string) {
       const trimmedPhrase = phrase.trim()
       if (!trimmedPhrase) {
         return
@@ -72,7 +68,6 @@ const useMoviesStore = create<MoviesState>()(
       try {
         set(state => {
           state.isLoading = true
-          state.error = null
         })
 
         let collection = get().moviesCollection
@@ -105,24 +100,23 @@ const useMoviesStore = create<MoviesState>()(
           state.hasLoaded = true
         })
       } catch (error) {
-        console.error('Error fetching movie suggestions:', error)
-        set(state => {
-          state.error = (error as Error).message
-        })
+        throw new Error(
+          `Error fetching movie suggestions: ${(error as Error).message}`
+        )
       } finally {
         set(state => {
           state.isLoading = false
         })
       }
     }
+
     return {
       moviesCollection: null,
       movies: [],
       isLoading: false,
       hasLoaded: false,
-      error: null,
       setMoviesCollection,
-      getMoviesSuggestions,
+      setMoviesSuggestions,
     }
   })
 )
@@ -132,5 +126,11 @@ export const useSetMoviesCollection = () =>
 
 export const useMovies = () => useMoviesStore(state => state.movies)
 
-export const useGetMoviesSuggestions = () =>
-  useMoviesStore(state => state.getMoviesSuggestions)
+export const useMoviesLoadingState = () =>
+  useMoviesStore(state => ({
+    isLoading: state.isLoading,
+    hasLoaded: state.hasLoaded,
+  }))
+
+export const useSetMoviesSuggestions = () =>
+  useMoviesStore(state => state.setMoviesSuggestions)

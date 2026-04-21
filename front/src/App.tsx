@@ -3,9 +3,10 @@ import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import type { Movie } from '@/stores/moviesStore'
 import {
-  useGetMoviesSuggestions,
   useMovies,
+  useMoviesLoadingState,
   useSetMoviesCollection,
+  useSetMoviesSuggestions,
 } from '@/stores/moviesStore'
 
 const mockMovies: Movie[] = [
@@ -69,38 +70,33 @@ function getPosterUrl(seed: string) {
   return `https://picsum.photos/seed/${encodeURIComponent(seed)}/400/600`
 }
 
-const moodColors = [
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#3b82f6', // blue
-  '#f97316', // orange
+const moodOverlayClasses = [
+  'bg-linear-to-t from-violet-500/90 via-violet-500/40 to-transparent',
+  'bg-linear-to-t from-pink-500/90 via-pink-500/40 to-transparent',
+  'bg-linear-to-t from-amber-500/90 via-amber-500/40 to-transparent',
+  'bg-linear-to-t from-emerald-500/90 via-emerald-500/40 to-transparent',
+  'bg-linear-to-t from-blue-500/90 via-blue-500/40 to-transparent',
+  'bg-linear-to-t from-orange-500/90 via-orange-500/40 to-transparent',
 ]
 
 export default function App() {
   const setMoviesCollection = useSetMoviesCollection()
   const [searchQuery, setSearchQuery] = useState('')
   const movies = useMovies()
-  const getMoviesSuggestions = useGetMoviesSuggestions()
+  const setMoviesSuggestions = useSetMoviesSuggestions()
   const [isInputFocused, setIsInputFocused] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [hasLoaded, setHasLoaded] = useState(false)
+  const { isLoading, hasLoaded } = useMoviesLoadingState()
   const [error, setError] = useState<string | null>(null)
   const visibleMovies = movies.length > 0 ? movies : mockMovies
 
   useEffect(() => {
-    setIsLoading(true)
     setMoviesCollection()
-      .then(() => {
-        setHasLoaded(true)
-      })
+      .then(() => {})
       .catch(err => {
         console.error('Error initializing collection:', err)
-        setError('Could not initialize movie collection.')
-      })
-      .finally(() => {
-        setIsLoading(false)
+        setError(
+          `An error occurred while initializing the movie collection: ${err.message}`
+        )
       })
   }, [setMoviesCollection])
 
@@ -111,25 +107,14 @@ export default function App() {
       return
     }
     setError(null)
-    setIsLoading(true)
-    getMoviesSuggestions(trimmedQuery)
-      .catch(err => {
-        console.error('Error during search:', err)
-        setError('An error occurred while fetching movie suggestions.')
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+    setMoviesSuggestions(trimmedQuery).catch(err => {
+      console.error('Error during search:', err)
+      setError('An error occurred while fetching movie suggestions.')
+    })
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background:
-          'linear-gradient(to bottom, #0f0f23 0%, #1a1a2e 50%, #16213e 100%)',
-      }}
-    >
+    <div className="min-h-screen bg-linear-to-b from-[#0f0f23] via-[#1a1a2e] to-[#16213e]">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -157,12 +142,9 @@ export default function App() {
         >
           <div className="relative mx-auto max-w-2xl">
             <Search
-              className="absolute left-5 top-1/2 size-5 -translate-y-1/2 transition-colors"
-              style={{
-                color: isInputFocused
-                  ? 'var(--color-purple)'
-                  : 'rgba(255, 255, 255, 0.4)',
-              }}
+              className={`absolute left-5 top-1/2 size-5 -translate-y-1/2 transition-colors ${
+                isInputFocused ? 'text-purple' : 'text-white/40'
+              }`}
             />
             <input
               type="text"
@@ -171,28 +153,20 @@ export default function App() {
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setIsInputFocused(false)}
               placeholder="Como você quer se sentir?"
-              style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                backdropFilter: 'blur(10px)',
-                border: isInputFocused
-                  ? '2px solid var(--color-purple)'
-                  : '2px solid rgba(255, 255, 255, 0.1)',
-                color: 'white',
-              }}
-              className="w-full rounded-2xl py-5 pl-14 pr-5 transition-all placeholder:italic placeholder:text-white/40 focus:outline-none focus:ring-0"
+              className={`w-full rounded-2xl border-2 bg-white/5 py-5 pl-14 pr-5 text-white backdrop-blur-[10px] transition-all placeholder:italic placeholder:text-white/40 focus:outline-none focus:ring-0 ${
+                isInputFocused ? 'border-purple' : 'border-white/10'
+              }`}
             />
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleSearch()}
               disabled={isLoading || !hasLoaded}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-xl px-6 py-3 transition-all"
-              style={{
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-                color: 'white',
-                opacity: isLoading || !hasLoaded ? 0.6 : 1,
-                cursor: isLoading || !hasLoaded ? 'not-allowed' : 'pointer',
-              }}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-xl bg-linear-to-br from-violet-500 to-pink-500 px-6 py-3 text-white transition-all ${
+                isLoading || !hasLoaded
+                  ? 'cursor-not-allowed opacity-60'
+                  : 'cursor-pointer opacity-100'
+              }`}
             >
               {isLoading ? 'Carregando...' : 'Buscar'}
             </motion.button>
@@ -210,23 +184,11 @@ export default function App() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-8 flex items-center gap-3"
           >
-            <div
-              className="h-px flex-1"
-              style={{
-                background:
-                  'linear-gradient(to right, transparent, var(--color-purple)/30, transparent)',
-              }}
-            />
+            <div className="h-px flex-1 bg-linear-to-r from-transparent via-purple/30 to-transparent" />
             <h2 className="text-sm uppercase tracking-wider text-white/50">
               Para você
             </h2>
-            <div
-              className="h-px flex-1"
-              style={{
-                background:
-                  'linear-gradient(to right, transparent, var(--color-purple)/30, transparent)',
-              }}
-            />
+            <div className="h-px flex-1 bg-linear-to-r from-transparent via-purple/30 to-transparent" />
           </motion.div>
 
           <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
@@ -247,16 +209,10 @@ export default function App() {
                     transition={{ duration: 0.4, ease: 'easeOut' }}
                   />
                   <div
-                    className="absolute inset-0 opacity-0 transition-opacity duration-400 group-hover:opacity-100"
-                    style={{
-                      background: `linear-gradient(to top, ${moodColors[index % moodColors.length]}dd 0%, ${moodColors[index % moodColors.length]}66 40%, transparent 100%)`,
-                    }}
+                    className={`absolute inset-0 opacity-0 transition-opacity duration-400 group-hover:opacity-100 ${moodOverlayClasses[index % moodOverlayClasses.length]}`}
                   >
                     <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <div
-                        className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs italic backdrop-blur-sm"
-                        style={{ color: 'white' }}
-                      >
+                      <div className="mb-2 inline-block rounded-full bg-white/20 px-3 py-1 text-xs italic text-white backdrop-blur-sm">
                         {movie.tags.split(',')[0]?.trim() || 'movie'}
                       </div>
                       <div className="mb-1 text-xs text-white/90">
