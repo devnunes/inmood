@@ -17,3 +17,6 @@ node_modules/
 vector_database/chroma/
 
 .vscode
+.DS_Store
+.idea
+*.log
