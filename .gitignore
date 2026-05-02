@@ -20,3 +20,9 @@ vector_database/chroma/
 .DS_Store
 .idea
 *.log
+
+# Environment files (potential secrets)
+.env
+.env.local
+.env.*
+!.env.example
