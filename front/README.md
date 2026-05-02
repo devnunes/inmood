@@ -1,73 +1,58 @@
-# React + TypeScript + Vite
+# InMood Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend application for InMood, a mood-based movie recommendation experience.
 
-Currently, two official plugins are available:
+This app captures a mood phrase (for example, "I want something nostalgic and emotional"), queries ChromaDB, and displays the closest movie recommendations.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+This project is part of my post-graduation program at Rocketseat.
 
-## React Compiler
+## Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19 + TypeScript
+- Vite 8
+- Zustand for state management
+- Tailwind CSS 4
+- Chroma JS client
+- Hugging Face Transformers (browser embedding pipeline)
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js 20+
+- pnpm 10+
+- Chroma server running on `http://localhost:8000`
+- Collection `movies` loaded (via `../data_loader`)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Run
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm dev
 ```
+
+Open `http://localhost:5173`.
+
+## Scripts
+
+```bash
+pnpm dev
+pnpm build
+pnpm preview
+pnpm lint
+```
+
+## How It Connects To Chroma
+
+- Chroma endpoint is configured in `src/lib/chromadb.ts`.
+- The app gets collection `movies` and runs similarity queries in `src/stores/moviesStore.ts`.
+- Embeddings are generated with `Xenova/all-MiniLM-L6-v2` in `src/models/embedder.ts`.
+
+## Troubleshooting
+
+- If the app cannot load suggestions, verify Chroma is running on port 8000.
+- If results are empty, confirm the data loader has already populated collection `movies`.
+- If model downloads fail, confirm internet access in the browser environment.
